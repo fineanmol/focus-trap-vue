@@ -53,7 +53,15 @@ function resolveInitialFocus(
   return target
 }
 
-export const FocusTrap = defineComponent({
+/** Public methods exposed via template ref — e.g. `const trap = ref<FocusTrapExposed>()` */
+export interface FocusTrapExposed {
+  /** Programmatically activate the focus trap. */
+  activate(): void
+  /** Programmatically deactivate the focus trap and restore focus. */
+  deactivate(): void
+}
+
+const _FocusTrap = defineComponent({
   name: "FocusTrap",
 
   props: {
@@ -224,7 +232,7 @@ export const FocusTrap = defineComponent({
       deactivate()
     })
 
-    expose({ activate, deactivate })
+    expose({ activate, deactivate } satisfies FocusTrapExposed)
 
     // ── Render ───────────────────────────────────────────────────────────────
     return () => {
@@ -240,3 +248,23 @@ export const FocusTrap = defineComponent({
     }
   },
 })
+
+/**
+ * FocusTrap component. Traps keyboard focus within its single child element.
+ *
+ * @example
+ * ```vue
+ * <FocusTrap v-model:active="isOpen">
+ *   <dialog>…</dialog>
+ * </FocusTrap>
+ * ```
+ *
+ * Access imperative API via template ref:
+ * ```typescript
+ * const trap = ref<FocusTrapExposed>()
+ * trap.value?.activate()
+ * trap.value?.deactivate()
+ * ```
+ */
+export const FocusTrap: typeof _FocusTrap & { new (): FocusTrapExposed } =
+  _FocusTrap as unknown as typeof _FocusTrap & { new (): FocusTrapExposed }
