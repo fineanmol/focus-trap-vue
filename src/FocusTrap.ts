@@ -262,7 +262,11 @@ const _FocusTrap = defineComponent({
       emit("update:active", false)
 
       if (props.returnFocusOnDeactivate && previouslyFocused) {
-        previouslyFocused.focus({ preventScroll: props.preventScroll })
+        // Defer to the next microtask so Vue has flushed its DOM updates before we
+        // try to focus — the previously focused element may have had :disabled="true"
+        // while the trap was active (e.g. the button that opened it).
+        const target = previouslyFocused
+        Promise.resolve().then(() => target.focus({ preventScroll: props.preventScroll }))
       }
 
       emit("postDeactivate")
