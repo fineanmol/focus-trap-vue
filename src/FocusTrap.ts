@@ -19,6 +19,21 @@ export type InitialFocusTarget =
   | (() => HTMLElement | null)
   | false
 
+export type FallbackFocusTarget =
+  | string
+  | HTMLElement
+  | (() => HTMLElement | null)
+
+/** Methods available when you use a template ref on FocusTrap. */
+export interface FocusTrapExposed {
+  activate(): void
+  deactivate(): void
+  /** Temporarily stop trapping focus without fully deactivating. */
+  pause(): void
+  /** Resume trapping after a pause. */
+  unpause(): void
+}
+
 export interface FocusTrapOptions {
   /** Whether the trap is active. Supports v-model:active. Default: true */
   active?: boolean
@@ -32,6 +47,11 @@ export interface FocusTrapOptions {
   clickOutsideDeactivates?: boolean | ((e: MouseEvent | TouchEvent) => boolean)
   /** Element, selector, function, or false for the initial focus target */
   initialFocus?: InitialFocusTarget
+  /**
+   * Fallback element to focus when no tabbable elements are found inside the
+   * trap. Without this the container itself gets focused as a last resort.
+   */
+  fallbackFocus?: FallbackFocusTarget
   /** Delay setting initial focus by one tick. Default: true */
   delayInitialFocus?: boolean
   /** Prevent scroll when setting focus. Default: false */
@@ -40,23 +60,46 @@ export interface FocusTrapOptions {
 
 function resolveInitialFocus(
   container: HTMLElement,
-  target: InitialFocusTarget | undefined
+  target: InitialFocusTarget | undefined,
+  fallback: FallbackFocusTarget | undefined,
+  preventScroll: boolean
 ): HTMLElement | null {
   if (target === false) return null
-  if (!target) return getFirstTabbable(container)
+  if (!target) {
+    const first = getFirstTabbable(container)
+    if (first) return first
+    // No tabbable elements — try fallback, then the container itself.
+    return resolveFallbackFocus(container, fallback)
+  }
   if (typeof target === "string") {
-    return (container.querySelector<HTMLElement>(target) ??
+    return (
+      container.querySelector<HTMLElement>(target) ??
       document.querySelector<HTMLElement>(target) ??
-      null)
+      null
+    )
   }
   if (typeof target === "function") return target()
   return target
 }
 
-/** Methods available when you use a template ref on FocusTrap. */
-export interface FocusTrapExposed {
-  activate(): void
-  deactivate(): void
+function resolveFallbackFocus(
+  container: HTMLElement,
+  fallback: FallbackFocusTarget | undefined
+): HTMLElement | null {
+  if (!fallback) {
+    // Last resort: make the container itself focusable and use it.
+    if (!container.hasAttribute("tabindex")) container.setAttribute("tabindex", "-1")
+    return container
+  }
+  if (typeof fallback === "string") {
+    return (
+      container.querySelector<HTMLElement>(fallback) ??
+      document.querySelector<HTMLElement>(fallback) ??
+      null
+    )
+  }
+  if (typeof fallback === "function") return fallback()
+  return fallback
 }
 
 const _FocusTrap = defineComponent({
@@ -78,6 +121,10 @@ const _FocusTrap = defineComponent({
       type: [String, Object, Function, Boolean] as PropType<InitialFocusTarget>,
       default: undefined,
     },
+    fallbackFocus: {
+      type: [String, Object, Function] as PropType<FallbackFocusTarget>,
+      default: undefined,
+    },
     delayInitialFocus: { type: Boolean, default: true },
     preventScroll: { type: Boolean, default: false },
   },
@@ -88,6 +135,7 @@ const _FocusTrap = defineComponent({
     const containerRef = ref<HTMLElement | ComponentPublicInstance | null>(null)
     let previouslyFocused: HTMLElement | null = null
     let isTrapping = false
+    let isPaused = false
 
     const containerEl = computed<HTMLElement | null>(() => {
       const v = containerRef.value
@@ -98,7 +146,7 @@ const _FocusTrap = defineComponent({
     })
 
     function handleKeydown(e: KeyboardEvent) {
-      if (!isTrapping || !containerEl.value) return
+      if (!isTrapping || isPaused || !containerEl.value) return
 
       if (e.key === "Escape" && props.escapeDeactivates) {
         e.preventDefault()
@@ -129,7 +177,7 @@ const _FocusTrap = defineComponent({
     }
 
     function handlePointerDown(e: MouseEvent | TouchEvent) {
-      if (!isTrapping || !containerEl.value) return
+      if (!isTrapping || isPaused || !containerEl.value) return
 
       const target = (e.target ?? e.composedPath?.()?.[0]) as Node
       if (containerEl.value.contains(target)) return
@@ -153,19 +201,23 @@ const _FocusTrap = defineComponent({
 
     // If focus escapes the container somehow, pull it back.
     function handleFocusIn(e: FocusEvent) {
-      if (!isTrapping || !containerEl.value) return
+      if (!isTrapping || isPaused || !containerEl.value) return
       const target = e.target as HTMLElement
       if (!containerEl.value.contains(target)) {
-        // Focus escaped — pull it back
         const tabbable = getTabbable(containerEl.value)
         const first = tabbable[0]
         if (first) first.focus({ preventScroll: props.preventScroll })
+        else {
+          const fallback = resolveFallbackFocus(containerEl.value, props.fallbackFocus as FallbackFocusTarget | undefined)
+          fallback?.focus({ preventScroll: props.preventScroll })
+        }
       }
     }
 
     function activate() {
       if (isTrapping || !containerEl.value) return
       isTrapping = true
+      isPaused = false
       previouslyFocused = document.activeElement as HTMLElement
 
       document.addEventListener("keydown", handleKeydown, true)
@@ -178,7 +230,12 @@ const _FocusTrap = defineComponent({
 
       const doFocus = () => {
         if (!containerEl.value) return
-        const target = resolveInitialFocus(containerEl.value, props.initialFocus as InitialFocusTarget)
+        const target = resolveInitialFocus(
+          containerEl.value,
+          props.initialFocus as InitialFocusTarget,
+          props.fallbackFocus as FallbackFocusTarget | undefined,
+          props.preventScroll
+        )
         target?.focus({ preventScroll: props.preventScroll })
         emit("postActivate")
       }
@@ -194,6 +251,7 @@ const _FocusTrap = defineComponent({
     function deactivate() {
       if (!isTrapping) return
       isTrapping = false
+      isPaused = false
 
       document.removeEventListener("keydown", handleKeydown, true)
       document.removeEventListener("mousedown", handlePointerDown, true)
@@ -211,6 +269,14 @@ const _FocusTrap = defineComponent({
       previouslyFocused = null
     }
 
+    function pause() {
+      if (isTrapping) isPaused = true
+    }
+
+    function unpause() {
+      if (isTrapping) isPaused = false
+    }
+
     onMounted(() => {
       watch(
         () => props.active,
@@ -226,7 +292,7 @@ const _FocusTrap = defineComponent({
       deactivate()
     })
 
-    expose({ activate, deactivate } satisfies FocusTrapExposed)
+    expose({ activate, deactivate, pause, unpause } satisfies FocusTrapExposed)
 
     return () => {
       if (!slots.default) return null

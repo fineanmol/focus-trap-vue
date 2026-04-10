@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@fineanmol/focus-trap-vue — Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f8f8f5;
+      color: #1a1a1a;
+      line-height: 1.6;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .page {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+
+    header {
+      border-bottom: 2px solid #1a1a1a;
+      padding-bottom: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    header p {
+      margin-top: 0.4rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    header a { color: #1a1a1a; }
+
+    .demos { display: flex; flex-direction: column; gap: 2.5rem; }
+
+    .demo-block {
+      background: #fff;
+      border: 1.5px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .demo-block h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      padding: 1rem 1.25rem 0.6rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .demo-block p {
+      font-size: 0.875rem;
+      color: #555;
+      padding: 0.6rem 1.25rem 0;
+    }
+
+    .demo-area {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .trap-zone {
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      padding: 1.25rem;
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .trap-zone.active {
+      border-color: #c0392b;
+      border-style: solid;
+      background: #fff5f5;
+    }
+
+    .trap-zone .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+    }
+
+    .trap-zone.active .label {
+      color: #c0392b;
+    }
+
+    .trap-zone .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    button {
+      padding: 0.45rem 1rem;
+      border-radius: 5px;
+      border: 1.5px solid #1a1a1a;
+      background: #fff;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #f0f0f0; }
+    button:focus-visible {
+      outline: 2.5px solid #c0392b;
+      outline-offset: 2px;
+    }
+
+    button.primary {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    button.primary:hover { background: #333; }
+
+    input[type="text"] {
+      padding: 0.4rem 0.75rem;
+      border: 1.5px solid #ccc;
+      border-radius: 5px;
+      font-size: 0.875rem;
+      width: 200px;
+    }
+
+    input:focus-visible {
+      outline: 2.5px solid #c0392b;
+      outline-offset: 1px;
+    }
+
+    .kbd {
+      font-family: monospace;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.8rem;
+    }
+
+    .notice {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+
+    .log {
+      font-size: 0.75rem;
+      font-family: monospace;
+      color: #555;
+      background: #f5f5f5;
+      border-radius: 4px;
+      padding: 0.5rem 0.75rem;
+      min-height: 1.75rem;
+    }
+
+    a.back { color: #555; text-decoration: none; font-size: 0.875rem; }
+    a.back:hover { text-decoration: underline; }
+
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #ddd;
+      font-size: 0.8rem;
+      color: #888;
+    }
+
+    footer a { color: #555; }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="./dist/focus-trap-vue.global.js"></script>
+
+  <script>
+    const { createApp, ref, computed } = Vue
+    const { FocusTrap } = FocusTrapVue
+
+    createApp({
+      components: { FocusTrap },
+      setup() {
+        // Demo 1 — default
+        const d1 = ref(false)
+        const d1log = ref('')
+
+        // Demo 2 — custom initial focus, no escape
+        const d2 = ref(false)
+        const d2input = ref(null)
+        const d2log = ref('')
+
+        // Demo 3 — click outside deactivates
+        const d3 = ref(false)
+        const d3log = ref('')
+
+        // Demo 4 — allow outside click controlled by checkbox
+        const d4 = ref(false)
+        const d4allow = ref(false)
+        const d4log = ref('')
+
+        // Demo 5 — pause / unpause
+        const d5 = ref(false)
+        const d5paused = ref(false)
+        const d5trap = ref(null)
+        const d5log = ref('')
+
+        function log(target, msg) {
+          target.value = msg
+          setTimeout(() => { if (target.value === msg) target.value = '' }, 3000)
+        }
+
+        return {
+          d1, d1log,
+          d2, d2input, d2log,
+          d3, d3log,
+          d4, d4allow, d4log,
+          d5, d5paused, d5trap, d5log,
+          log,
+        }
+      },
+      template: `
+        <div class="page">
+          <header>
+            <h1>@fineanmol/focus-trap-vue</h1>
+            <p>
+              Active traps turn red. Tab stays inside. Hit Escape to close (where enabled).
+              &nbsp;·&nbsp;
+              <a href="https://github.com/fineanmol/focus-trap-vue" target="_blank">GitHub</a>
+            </p>
+          </header>
+
+          <div class="demos">
+
+            <!-- Demo 1: default -->
+            <div class="demo-block">
+              <h2>Default — Tab cycles, Escape closes</h2>
+              <p>Basic usage. Focus is trapped inside the dashed region when active.</p>
+              <div class="demo-area">
+                <div>
+                  <button class="primary" @click="d1 = true" :disabled="d1">Activate trap</button>
+                </div>
+                <FocusTrap v-model:active="d1"
+                  @activate="log(d1log, 'activated')"
+                  @deactivate="log(d1log, 'deactivated')"
+                >
+                  <div class="trap-zone" :class="{ active: d1 }">
+                    <span class="label">{{ d1 ? 'trap active' : 'trap inactive' }}</span>
+                    <div class="row">
+                      <a href="#!" @click.prevent>Link one</a>
+                      <a href="#!" @click.prevent>Link two</a>
+                      <a href="#!" @click.prevent>Link three</a>
+                    </div>
+                    <div class="row">
+                      <button @click="d1 = false">Deactivate trap</button>
+                    </div>
+                    <p class="notice">Press <kbd class="kbd">Escape</kbd> or click "Deactivate" to leave.</p>
+                  </div>
+                </FocusTrap>
+                <div class="log">{{ d1log }}</div>
+              </div>
+            </div>
+
+            <!-- Demo 2: custom initial focus, no escape -->
+            <div class="demo-block">
+              <h2>Custom initial focus — Escape disabled</h2>
+              <p>When activated, focus jumps to the text input. Escape won't close it.</p>
+              <div class="demo-area">
+                <div>
+                  <button class="primary" @click="d2 = true" :disabled="d2">Activate trap</button>
+                </div>
+                <FocusTrap v-model:active="d2"
+                  :escape-deactivates="false"
+                  :initial-focus="() => d2input"
+                  @activate="log(d2log, 'activated — focus went to input')"
+                  @deactivate="log(d2log, 'deactivated')"
+                >
+                  <div class="trap-zone" :class="{ active: d2 }">
+                    <span class="label">{{ d2 ? 'trap active' : 'trap inactive' }}</span>
+                    <div class="row">
+                      <a href="#!" @click.prevent>Link</a>
+                      <input ref="d2input" type="text" placeholder="I get focused first" />
+                    </div>
+                    <div class="row">
+                      <button @click="d2 = false">Deactivate trap</button>
+                    </div>
+                    <p class="notice">Escape is disabled — you must click the button.</p>
+                  </div>
+                </FocusTrap>
+                <div class="log">{{ d2log }}</div>
+              </div>
+            </div>
+
+            <!-- Demo 3: click outside deactivates -->
+            <div class="demo-block">
+              <h2>Click outside deactivates</h2>
+              <p>Clicking anywhere outside the trap closes it.</p>
+              <div class="demo-area">
+                <div>
+                  <button class="primary" @click="d3 = true" :disabled="d3">Activate trap</button>
+                </div>
+                <FocusTrap v-model:active="d3"
+                  :click-outside-deactivates="true"
+                  @activate="log(d3log, 'activated')"
+                  @deactivate="log(d3log, 'deactivated by click outside or Escape')"
+                >
+                  <div class="trap-zone" :class="{ active: d3 }">
+                    <span class="label">{{ d3 ? 'trap active — click outside to close' : 'trap inactive' }}</span>
+                    <div class="row">
+                      <a href="#!" @click.prevent>Link</a>
+                      <button>Button</button>
+                    </div>
+                  </div>
+                </FocusTrap>
+                <div class="log">{{ d3log }}</div>
+              </div>
+            </div>
+
+            <!-- Demo 4: allow outside click callback -->
+            <div class="demo-block">
+              <h2>Allow outside click — controlled by callback</h2>
+              <p>A function decides whether clicks outside are allowed through.</p>
+              <div class="demo-area">
+                <label style="font-size:0.875rem; display:flex; gap:0.5rem; align-items:center;">
+                  <input type="checkbox" v-model="d4allow" />
+                  Allow outside clicks
+                </label>
+                <div>
+                  <button class="primary" @click="d4 = true" :disabled="d4">Activate trap</button>
+                </div>
+                <FocusTrap v-model:active="d4"
+                  :allow-outside-click="() => d4allow"
+                  @activate="log(d4log, 'activated')"
+                  @deactivate="log(d4log, 'deactivated')"
+                >
+                  <div class="trap-zone" :class="{ active: d4 }">
+                    <span class="label">{{ d4 ? 'trap active' : 'trap inactive' }}</span>
+                    <div class="row">
+                      <a href="#!" @click.prevent>Link</a>
+                      <button @click="d4 = false">Deactivate</button>
+                    </div>
+                    <p class="notice">Toggle the checkbox above and try clicking outside.</p>
+                  </div>
+                </FocusTrap>
+                <div class="log">{{ d4log }}</div>
+              </div>
+            </div>
+
+            <!-- Demo 5: pause / unpause -->
+            <div class="demo-block">
+              <h2>Pause and unpause</h2>
+              <p>Pause suspends trapping temporarily without fully deactivating. Useful when opening a nested popup over the trap.</p>
+              <div class="demo-area">
+                <div class="row">
+                  <button class="primary" @click="d5 = true" :disabled="d5">Activate trap</button>
+                  <button @click="d5trap?.pause(); d5paused = true; log(d5log, 'paused')" :disabled="!d5 || d5paused">Pause</button>
+                  <button @click="d5trap?.unpause(); d5paused = false; log(d5log, 'unpaused')" :disabled="!d5 || !d5paused">Unpause</button>
+                </div>
+                <FocusTrap ref="d5trap" v-model:active="d5"
+                  @activate="log(d5log, 'activated')"
+                  @deactivate="d5paused = false; log(d5log, 'deactivated')"
+                >
+                  <div class="trap-zone" :class="{ active: d5 }">
+                    <span class="label">
+                      {{ d5 ? (d5paused ? 'trap paused — Tab is free' : 'trap active') : 'trap inactive' }}
+                    </span>
+                    <div class="row">
+                      <a href="#!" @click.prevent>Link one</a>
+                      <a href="#!" @click.prevent>Link two</a>
+                      <button @click="d5 = false">Deactivate</button>
+                    </div>
+                    <p class="notice">When paused, Tab moves freely. Unpause to restore trapping.</p>
+                  </div>
+                </FocusTrap>
+                <div class="log">{{ d5log }}</div>
+              </div>
+            </div>
+
+          </div>
+
+          <footer>
+            <a href="https://github.com/fineanmol/focus-trap-vue" target="_blank">github.com/fineanmol/focus-trap-vue</a>
+            &nbsp;·&nbsp;
+            <a href="https://www.npmjs.com/package/@fineanmol/focus-trap-vue" target="_blank">npm</a>
+          </footer>
+        </div>
+      `
+    }).mount('#app')
+  </script>
+</body>
+</html>
