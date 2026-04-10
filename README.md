@@ -1,6 +1,6 @@
-# vue-focus-trap
+# vue-focus-guard
 
-[![npm](https://img.shields.io/npm/v/vue-focus-trap)](https://www.npmjs.com/package/vue-focus-trap)
+[![npm](https://img.shields.io/npm/v/vue-focus-guard)](https://www.npmjs.com/package/vue-focus-guard)
 [![Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://fineanmol-focus-trap-vue.netlify.app)
 
 > Vue 3 component to trap keyboard focus within a DOM element.
@@ -12,7 +12,7 @@ Written from scratch — no `focus-trap` peer dependency. Useful for modals, dia
 ## Installation
 
 ```sh
-npm install vue-focus-trap
+npm install vue-focus-guard
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ npm install vue-focus-trap
 ```vue
 <script setup>
 import { ref } from 'vue'
-import { FocusTrap } from 'vue-focus-trap'
+import { FocusTrap } from 'vue-focus-guard'
 
 const isOpen = ref(false)
 </script>
@@ -53,8 +53,8 @@ When `isOpen` becomes `true`, the trap activates and focus moves to the first ta
 ```vue
 <script setup>
 import { ref } from 'vue'
-import { FocusTrap } from 'vue-focus-trap'
-import type { FocusTrapExposed } from 'vue-focus-trap'
+import { FocusTrap } from 'vue-focus-guard'
+import type { FocusTrapExposed } from 'vue-focus-guard'
 
 const trap = ref<FocusTrapExposed>()
 </script>
@@ -74,7 +74,7 @@ const trap = ref<FocusTrapExposed>()
 
 ```js
 import { createApp } from 'vue'
-import { FocusTrap } from 'vue-focus-trap'
+import { FocusTrap } from 'vue-focus-guard'
 import App from './App.vue'
 
 createApp(App)
@@ -113,7 +113,7 @@ createApp(App)
 Use `ref` typed as `FocusTrapExposed` to get access to the imperative API:
 
 ```typescript
-import type { FocusTrapExposed } from 'vue-focus-trap'
+import type { FocusTrapExposed } from 'vue-focus-guard'
 
 const trap = ref<FocusTrapExposed>()
 
@@ -225,7 +225,7 @@ function closeInner() {
 The package exports its tabbable-element helpers if you need them directly:
 
 ```js
-import { getTabbable, getFirstTabbable, getLastTabbable } from 'vue-focus-trap'
+import { getTabbable, getFirstTabbable, getLastTabbable } from 'vue-focus-guard'
 
 const all     = getTabbable(containerEl)     // all focusable elements in order
 const first   = getFirstTabbable(containerEl)
