@@ -1,6 +1,6 @@
 {
   "name": "vue-focus-guard",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Zero-dependency Vue 3 component that traps keyboard focus within a DOM element — written from scratch.",
   "main": "dist/focus-trap-vue.cjs.js",
   "module": "dist/focus-trap-vue.esm.js",
