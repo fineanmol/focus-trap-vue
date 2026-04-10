@@ -1,5 +1,5 @@
 {
-  "name": "@fineanmol/focus-trap-vue",
+  "name": "vue-focus-trap",
   "version": "1.2.0",
   "description": "Zero-dependency Vue 3 component that traps keyboard focus within a DOM element — written from scratch.",
   "main": "dist/focus-trap-vue.cjs.js",
@@ -36,9 +36,6 @@
   ],
   "author": "Anmol Agarwal <https://github.com/fineanmol>",
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "peerDependencies": {
     "vue": "^3.0.0"
   },
