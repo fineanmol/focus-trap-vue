@@ -255,3 +255,4 @@ Elements are included only if they pass a visibility check (not `display:none`, 
 ## License
 
 MIT © [Anmol Agarwal](https://github.com/fineanmol)
+
