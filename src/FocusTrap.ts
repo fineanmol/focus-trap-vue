@@ -53,11 +53,9 @@ function resolveInitialFocus(
   return target
 }
 
-/** Public methods exposed via template ref — e.g. `const trap = ref<FocusTrapExposed>()` */
+/** Methods available when you use a template ref on FocusTrap. */
 export interface FocusTrapExposed {
-  /** Programmatically activate the focus trap. */
   activate(): void
-  /** Programmatically deactivate the focus trap and restore focus. */
   deactivate(): void
 }
 
@@ -99,7 +97,6 @@ const _FocusTrap = defineComponent({
         : ((v as ComponentPublicInstance).$el as HTMLElement)
     })
 
-    // ── Tab key handler ─────────────────────────────────────────────────────
     function handleKeydown(e: KeyboardEvent) {
       if (!isTrapping || !containerEl.value) return
 
@@ -131,7 +128,6 @@ const _FocusTrap = defineComponent({
       }
     }
 
-    // ── Click-outside handler ────────────────────────────────────────────────
     function handlePointerDown(e: MouseEvent | TouchEvent) {
       if (!isTrapping || !containerEl.value) return
 
@@ -155,7 +151,7 @@ const _FocusTrap = defineComponent({
       if (!shouldAllow) e.preventDefault()
     }
 
-    // ── Focus-escape guard ───────────────────────────────────────────────────
+    // If focus escapes the container somehow, pull it back.
     function handleFocusIn(e: FocusEvent) {
       if (!isTrapping || !containerEl.value) return
       const target = e.target as HTMLElement
@@ -167,7 +163,6 @@ const _FocusTrap = defineComponent({
       }
     }
 
-    // ── Activate / Deactivate ────────────────────────────────────────────────
     function activate() {
       if (isTrapping || !containerEl.value) return
       isTrapping = true
@@ -189,7 +184,7 @@ const _FocusTrap = defineComponent({
       }
 
       if (props.delayInitialFocus) {
-        // nextTick equivalent without Vue import overhead
+        // Delay by one microtask so enter animations have started before we steal focus.
         Promise.resolve().then(doFocus)
       } else {
         doFocus()
@@ -216,7 +211,6 @@ const _FocusTrap = defineComponent({
       previouslyFocused = null
     }
 
-    // ── Lifecycle ────────────────────────────────────────────────────────────
     onMounted(() => {
       watch(
         () => props.active,
@@ -234,7 +228,6 @@ const _FocusTrap = defineComponent({
 
     expose({ activate, deactivate } satisfies FocusTrapExposed)
 
-    // ── Render ───────────────────────────────────────────────────────────────
     return () => {
       if (!slots.default) return null
       const vnodes = slots.default().filter(vn => vn.type !== Comment)
@@ -249,22 +242,5 @@ const _FocusTrap = defineComponent({
   },
 })
 
-/**
- * FocusTrap component. Traps keyboard focus within its single child element.
- *
- * @example
- * ```vue
- * <FocusTrap v-model:active="isOpen">
- *   <dialog>…</dialog>
- * </FocusTrap>
- * ```
- *
- * Access imperative API via template ref:
- * ```typescript
- * const trap = ref<FocusTrapExposed>()
- * trap.value?.activate()
- * trap.value?.deactivate()
- * ```
- */
 export const FocusTrap: typeof _FocusTrap & { new (): FocusTrapExposed } =
   _FocusTrap as unknown as typeof _FocusTrap & { new (): FocusTrapExposed }

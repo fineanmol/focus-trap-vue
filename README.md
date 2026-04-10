@@ -2,9 +2,9 @@
 
 [![npm](https://img.shields.io/npm/v/@fineanmol/focus-trap-vue)](https://www.npmjs.com/package/@fineanmol/focus-trap-vue)
 
-**Zero-dependency** Vue 3 component that traps keyboard focus within a DOM element. Written from scratch — no `focus-trap` peer dependency required.
+A Vue 3 component that keeps keyboard focus inside a container. No third-party focus-trap library needed — written from scratch.
 
-Great for modals, dialogs, drawers, and any UI that must be keyboard-accessible.
+Useful for modals, dialogs, drawers, anything where you need Tab to stay within a region.
 
 ## Install
 
@@ -12,7 +12,7 @@ Great for modals, dialogs, drawers, and any UI that must be keyboard-accessible.
 npm install @fineanmol/focus-trap-vue
 ```
 
-## Quick start
+## Usage
 
 ```vue
 <script setup>
@@ -27,61 +27,75 @@ const open = ref(false)
 
   <FocusTrap v-model:active="open">
     <dialog open>
-      <p>Focus is now trapped here.</p>
+      <p>Tab won't leave this dialog while it's open.</p>
       <button @click="open = false">Close</button>
     </dialog>
   </FocusTrap>
 </template>
 ```
 
+FocusTrap wraps a **single child element** and attaches listeners to it when active. When you close the dialog, focus goes back to wherever it was before.
+
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `active` | `boolean` | `true` | Activate/deactivate the trap. Use `v-model:active`. |
-| `escapeDeactivates` | `boolean` | `true` | Deactivate on Escape key |
-| `returnFocusOnDeactivate` | `boolean` | `true` | Return focus to the previously focused element |
-| `allowOutsideClick` | `boolean \| (e) => boolean` | `true` | Allow clicks outside the trap |
-| `clickOutsideDeactivates` | `boolean \| (e) => boolean` | `false` | Deactivate when clicking outside |
-| `initialFocus` | `string \| HTMLElement \| () => HTMLElement \| false` | first tabbable | Initial focus target |
-| `delayInitialFocus` | `boolean` | `true` | Set initial focus after a microtask tick |
-| `preventScroll` | `boolean` | `false` | Pass `preventScroll` to `.focus()` calls |
+| Prop | Type | Default | Notes |
+|------|------|---------|-------|
+| `active` | `boolean` | `true` | Whether the trap is on. Use `v-model:active` to toggle. |
+| `escapeDeactivates` | `boolean` | `true` | Press Escape to close. |
+| `returnFocusOnDeactivate` | `boolean` | `true` | Restore focus to the previously focused element when done. |
+| `allowOutsideClick` | `boolean \| (e) => boolean` | `true` | Whether clicks outside the trap are allowed through. |
+| `clickOutsideDeactivates` | `boolean \| (e) => boolean` | `false` | Close the trap when clicking outside. |
+| `initialFocus` | `string \| HTMLElement \| () => HTMLElement \| false` | first tabbable | What to focus on open. Pass `false` to skip. |
+| `delayInitialFocus` | `boolean` | `true` | Wait one microtask before focusing — helps with enter animations. |
+| `preventScroll` | `boolean` | `false` | Passed straight to `.focus({ preventScroll })`. |
 
 ## Events
 
-| Event | Payload | Description |
-|-------|---------|-------------|
-| `update:active` | `boolean` | For `v-model:active` |
-| `activate` | — | Trap just activated |
-| `postActivate` | — | After initial focus is set |
-| `deactivate` | — | Trap just deactivated |
-| `postDeactivate` | — | After focus is returned |
+| Event | When |
+|-------|------|
+| `activate` | Right when the trap turns on |
+| `postActivate` | After the initial element is focused |
+| `deactivate` | Right when the trap turns off |
+| `postDeactivate` | After focus is restored to the previous element |
+| `update:active` | For `v-model:active` |
 
-## Methods (via template ref)
+## Controlling it via ref
+
+If you need to activate or deactivate programmatically rather than via `v-model`:
 
 ```vue
-<FocusTrap ref="trap" :active="false">
-  <div>...</div>
-</FocusTrap>
+<script setup>
+import { ref } from 'vue'
+import { FocusTrap } from '@fineanmol/focus-trap-vue'
+import type { FocusTrapExposed } from '@fineanmol/focus-trap-vue'
 
-<button @click="trap.activate()">Open</button>
-<button @click="trap.deactivate()">Close</button>
+const trap = ref<FocusTrapExposed>()
+</script>
+
+<template>
+  <FocusTrap ref="trap" :active="false">
+    <div role="dialog">...</div>
+  </FocusTrap>
+
+  <button @click="trap?.activate()">Open</button>
+  <button @click="trap?.deactivate()">Close</button>
+</template>
 ```
 
-## Advanced examples
+## More examples
 
-### Custom initial focus
+### Focus a specific element first
 
 ```vue
 <FocusTrap v-model:active="open" :initial-focus="() => $refs.input">
   <dialog open>
-    <input ref="input" placeholder="focused first" />
+    <input ref="input" placeholder="I get focused first" />
     <button>Submit</button>
   </dialog>
 </FocusTrap>
 ```
 
-### No initial focus (just trap Tab)
+### Don't auto-focus anything
 
 ```vue
 <FocusTrap :initial-focus="false" v-model:active="open">
@@ -89,7 +103,7 @@ const open = ref(false)
 </FocusTrap>
 ```
 
-### Deactivate on outside click
+### Close on outside click
 
 ```vue
 <FocusTrap v-model:active="open" :click-outside-deactivates="true">
@@ -97,9 +111,9 @@ const open = ref(false)
 </FocusTrap>
 ```
 
-## Utilities
+## Tabbable helpers
 
-The package also exports its tabbable-element helpers so you can use them directly:
+The internal element-scanning utilities are exported if you need them elsewhere:
 
 ```js
 import { getTabbable, getFirstTabbable, getLastTabbable } from '@fineanmol/focus-trap-vue'
@@ -109,11 +123,9 @@ const focusable = getTabbable(document.getElementById('my-dialog'))
 
 ## How it works
 
-- **Tabbable detection** — our own selector-based scan covering `<a>`, `<button>`, `<input>`, `<select>`, `<textarea>`, `[contenteditable]`, `[tabindex]`, `<details summary>`, `<audio controls>`, `<video controls>`. Filters out `display:none`, `visibility:hidden`, `hidden`, and `[inert]` ancestors.
-- **Tab cycling** — `keydown` listener (capture phase) redirects Tab/Shift+Tab at the boundary.
-- **Focus escape guard** — `focusin` listener (capture phase) pulls focus back if it escapes the container.
-- **Click outside** — configurable via `allowOutsideClick` / `clickOutsideDeactivates`.
-- **Cleanup** — all listeners removed on deactivate and on component unmount.
+Tab and Shift+Tab key events are intercepted in the capture phase. When focus would leave the container, it wraps around to the other end instead. If focus escapes by some other means (e.g. a script calling `.focus()` on something outside), a `focusin` listener catches it and pulls it back. Click-outside handling runs on `mousedown`/`touchstart`, also captured, so it fires before the click goes through.
+
+All listeners are removed when the trap deactivates or the component unmounts.
 
 ## License
 

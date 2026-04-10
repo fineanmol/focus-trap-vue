@@ -1,7 +1,4 @@
-/**
- * Our own tabbable element discovery — zero runtime deps.
- * Covers all interactive elements that receive keyboard focus in modern browsers.
- */
+// Elements that can receive keyboard focus, minus those that are hidden or inert.
 
 const TABBABLE_SELECTORS = [
   "a[href]:not([tabindex='-1'])",
