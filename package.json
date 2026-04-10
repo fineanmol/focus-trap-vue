@@ -1,0 +1,61 @@
+{
+  "name": "@fineanmol/focus-trap-vue",
+  "version": "1.0.0",
+  "description": "Zero-dependency Vue 3 component that traps keyboard focus within a DOM element — written from scratch.",
+  "main": "dist/focus-trap-vue.cjs.js",
+  "module": "dist/focus-trap-vue.esm.js",
+  "browser": "dist/focus-trap-vue.global.js",
+  "types": "dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/focus-trap-vue.esm.js",
+      "require": "./dist/focus-trap-vue.cjs.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "focus",
+    "trap",
+    "focus-trap",
+    "a11y",
+    "accessibility",
+    "modal",
+    "vue",
+    "vue3",
+    "component"
+  ],
+  "author": "Anmol Agarwal <https://github.com/fineanmol>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-terser": "^0.4.4",
+    "rollup": "^4.x",
+    "rollup-plugin-typescript2": "^0.37.0",
+    "typescript": "^5.x",
+    "vue": "^3.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fineanmol/focus-trap-vue.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fineanmol/focus-trap-vue/issues"
+  },
+  "homepage": "https://github.com/fineanmol/focus-trap-vue#readme"
+}
