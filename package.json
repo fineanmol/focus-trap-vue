@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^6.0.2",
-    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-terser": "^1.0.0",
     "rollup": "^4.x",
     "rollup-plugin-typescript2": "^0.37.0",
     "typescript": "^5.x",
