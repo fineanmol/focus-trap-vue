@@ -33,7 +33,7 @@ jobs:
 
     permissions:
       contents: write
-      id-token: write
+      id-token: write  # Required for OIDC trusted publisher — no NPM_TOKEN needed
 
     steps:
       - uses: actions/checkout@v6
@@ -44,8 +44,6 @@ jobs:
         with:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Configure git
         run: |
@@ -88,16 +86,6 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify npm authentication
-        run: |
-          set -euo pipefail
-          NPM_USER="$(npm whoami)"
-          echo "Authenticated as: ${NPM_USER}"
-          PKG="$(npm pkg get name | tr -d '"')"
-          npm view "$PKG" version || echo "First publish for $PKG"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Check if version already published
         id: version_check
         run: |
@@ -112,11 +100,12 @@ jobs:
 
       - name: Publish to npm
         if: steps.version_check.outputs.skip != 'true'
-        run: npm publish --access public --ignore-scripts
+        run: npm publish --access public --provenance --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Commit version bump, tag, and push
+        if: steps.version_check.outputs.skip != 'true'
         run: |
           git add package.json
           git commit -m "chore(release): ${{ steps.version.outputs.new_version }} [skip ci]"

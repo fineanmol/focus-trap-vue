@@ -1,13 +1,14 @@
 # vue-focus-guard
 
-[![npm](https://img.shields.io/npm/v/vue-focus-guard)](https://www.npmjs.com/package/vue-focus-guard)
-[![Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://fineanmol-focus-trap-vue.netlify.app)
+[![npm version](https://img.shields.io/npm/v/vue-focus-guard?label=npm)](https://www.npmjs.com/package/vue-focus-guard)
+[![npm downloads](https://img.shields.io/npm/dm/vue-focus-guard)](https://www.npmjs.com/package/vue-focus-guard)
+[![Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://focusvuetrap.netlify.app/)
 
 > Vue 3 component to trap keyboard focus within a DOM element.
 
 Written from scratch — no `focus-trap` peer dependency. Useful for modals, dialogs, drawers, and anything that needs to be keyboard-accessible.
 
-**[→ Live demo](https://fineanmol-focus-trap-vue.netlify.app)**
+**[→ Live demo](https://focusvuetrap.netlify.app/)**
 
 ## Installation
 
@@ -27,10 +28,10 @@ npm install vue-focus-guard
 
 ```vue
 <script setup>
-import { ref } from 'vue'
-import { FocusTrap } from 'vue-focus-guard'
+import { ref } from "vue";
+import { FocusTrap } from "vue-focus-guard";
 
-const isOpen = ref(false)
+const isOpen = ref(false);
 </script>
 
 <template>
@@ -73,54 +74,52 @@ const trap = ref<FocusTrapExposed>()
 ### Global registration
 
 ```js
-import { createApp } from 'vue'
-import { FocusTrap } from 'vue-focus-guard'
-import App from './App.vue'
+import { createApp } from "vue";
+import { FocusTrap } from "vue-focus-guard";
+import App from "./App.vue";
 
-createApp(App)
-  .component('FocusTrap', FocusTrap)
-  .mount('#app')
+createApp(App).component("FocusTrap", FocusTrap).mount("#app");
 ```
 
 ## Props
 
 `FocusTrap` requires exactly one child element (or component). It clones the child and attaches listeners to it.
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `active` | `boolean` | `true` | Whether the trap is on. Use `v-model:active` to sync with parent state. |
-| `escapeDeactivates` | `boolean` | `true` | Press Escape to close and restore focus. |
-| `returnFocusOnDeactivate` | `boolean` | `true` | When deactivating, return focus to the element that had it before activation. |
-| `allowOutsideClick` | `boolean \| (e: MouseEvent\|TouchEvent) => boolean` | `true` | Whether clicks outside the trap are allowed. Pass a function for per-click control. |
-| `clickOutsideDeactivates` | `boolean \| (e: MouseEvent\|TouchEvent) => boolean` | `false` | Close the trap when clicking outside. |
-| `initialFocus` | `string \| HTMLElement \| () => HTMLElement \| false` | first tabbable | What gets focused on activation. A CSS selector, an element, a function that returns one, or `false` to skip auto-focus. |
-| `fallbackFocus` | `string \| HTMLElement \| () => HTMLElement` | container | What to focus when no tabbable elements are found. Falls back to focusing the container itself if not set. |
-| `delayInitialFocus` | `boolean` | `true` | Wait a microtask before setting initial focus. Helpful when the child element has an enter animation. |
-| `preventScroll` | `boolean` | `false` | Passed to `.focus({ preventScroll })` — stops the page from jumping when focusing an off-screen element. |
+| Prop                      | Type                                                  | Default        | Description                                                                                                              |
+| ------------------------- | ----------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `active`                  | `boolean`                                             | `true`         | Whether the trap is on. Use `v-model:active` to sync with parent state.                                                  |
+| `escapeDeactivates`       | `boolean`                                             | `true`         | Press Escape to close and restore focus.                                                                                 |
+| `returnFocusOnDeactivate` | `boolean`                                             | `true`         | When deactivating, return focus to the element that had it before activation.                                            |
+| `allowOutsideClick`       | `boolean \| (e: MouseEvent\|TouchEvent) => boolean`   | `true`         | Whether clicks outside the trap are allowed. Pass a function for per-click control.                                      |
+| `clickOutsideDeactivates` | `boolean \| (e: MouseEvent\|TouchEvent) => boolean`   | `false`        | Close the trap when clicking outside.                                                                                    |
+| `initialFocus`            | `string \| HTMLElement \| () => HTMLElement \| false` | first tabbable | What gets focused on activation. A CSS selector, an element, a function that returns one, or `false` to skip auto-focus. |
+| `fallbackFocus`           | `string \| HTMLElement \| () => HTMLElement`          | container      | What to focus when no tabbable elements are found. Falls back to focusing the container itself if not set.               |
+| `delayInitialFocus`       | `boolean`                                             | `true`         | Wait a microtask before setting initial focus. Helpful when the child element has an enter animation.                    |
+| `preventScroll`           | `boolean`                                             | `false`        | Passed to `.focus({ preventScroll })` — stops the page from jumping when focusing an off-screen element.                 |
 
 ## Events
 
-| Event | Payload | When it fires |
-|-------|---------|---------------|
-| `activate` | — | The moment the trap turns on |
-| `postActivate` | — | After the initial element has been focused |
-| `deactivate` | — | The moment the trap turns off |
-| `postDeactivate` | — | After focus has been returned to the previous element |
-| `update:active` | `boolean` | For `v-model:active` two-way binding |
+| Event            | Payload   | When it fires                                         |
+| ---------------- | --------- | ----------------------------------------------------- |
+| `activate`       | —         | The moment the trap turns on                          |
+| `postActivate`   | —         | After the initial element has been focused            |
+| `deactivate`     | —         | The moment the trap turns off                         |
+| `postDeactivate` | —         | After focus has been returned to the previous element |
+| `update:active`  | `boolean` | For `v-model:active` two-way binding                  |
 
 ## Methods (via template ref)
 
 Use `ref` typed as `FocusTrapExposed` to get access to the imperative API:
 
 ```typescript
-import type { FocusTrapExposed } from 'vue-focus-guard'
+import type { FocusTrapExposed } from "vue-focus-guard";
 
-const trap = ref<FocusTrapExposed>()
+const trap = ref<FocusTrapExposed>();
 
-trap.value?.activate()    // turn the trap on
-trap.value?.deactivate()  // turn it off and restore focus
-trap.value?.pause()       // suspend trapping without deactivating
-trap.value?.unpause()     // resume after a pause
+trap.value?.activate(); // turn the trap on
+trap.value?.deactivate(); // turn it off and restore focus
+trap.value?.pause(); // suspend trapping without deactivating
+trap.value?.unpause(); // resume after a pause
 ```
 
 ## Examples
@@ -225,11 +224,15 @@ function closeInner() {
 The package exports its tabbable-element helpers if you need them directly:
 
 ```js
-import { getTabbable, getFirstTabbable, getLastTabbable } from 'vue-focus-guard'
+import {
+  getTabbable,
+  getFirstTabbable,
+  getLastTabbable,
+} from "vue-focus-guard";
 
-const all     = getTabbable(containerEl)     // all focusable elements in order
-const first   = getFirstTabbable(containerEl)
-const last    = getLastTabbable(containerEl)
+const all = getTabbable(containerEl); // all focusable elements in order
+const first = getFirstTabbable(containerEl);
+const last = getLastTabbable(containerEl);
 ```
 
 Elements are included only if they pass a visibility check (not `display:none`, `visibility:hidden`, `hidden`, or `[inert]`).
@@ -245,14 +248,13 @@ Elements are included only if they pass a visibility check (not `display:none`, 
 
 ## Dist formats
 
-| File | Format | Use case |
-|------|--------|---------|
-| `dist/focus-trap-vue.esm.js` | ESM | Bundlers (Vite, webpack) |
-| `dist/focus-trap-vue.cjs.js` | CJS | Node / `require()` |
-| `dist/focus-trap-vue.cjs.prod.js` | CJS minified | Production Node |
-| `dist/focus-trap-vue.global.js` | IIFE | `<script>` tag / CDN |
+| File                              | Format       | Use case                 |
+| --------------------------------- | ------------ | ------------------------ |
+| `dist/focus-trap-vue.esm.js`      | ESM          | Bundlers (Vite, webpack) |
+| `dist/focus-trap-vue.cjs.js`      | CJS          | Node / `require()`       |
+| `dist/focus-trap-vue.cjs.prod.js` | CJS minified | Production Node          |
+| `dist/focus-trap-vue.global.js`   | IIFE         | `<script>` tag / CDN     |
 
 ## License
 
 MIT © [Anmol Agarwal](https://github.com/fineanmol)
-
